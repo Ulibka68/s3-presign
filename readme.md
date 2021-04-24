@@ -1,4 +1,4 @@
-# Сжатие изображение с помощью библиотеки sharp
+# Формирует presign url для загрузки в S3
 ## Текущий env
 Текущие настройки main.env указаны для: cloud-as001006
 aje...86r - account picts-backet-access
