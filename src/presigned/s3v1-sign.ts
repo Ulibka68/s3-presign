@@ -13,59 +13,76 @@ ts-node s3_put_presignedURL.ts
 [Outputs | Returns]:
 Uploads the specified file to the specified bucket.
 */
-import { S3Client } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+require("dotenv").config();
+const {
+  getSignedUrl,
+  S3RequestPresigner,
+} = require("@aws-sdk/s3-request-presigner");
+// import { Sha256 } from "@aws-crypto/sha256-browser";
+// import { Hash } from "@aws-sdk/hash-node";
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
-export namespace SIGN1 {
-  const {
-    S3,
-    CreateBucketCommand,
-    DeleteObjectCommand,
-    PutObjectCommand,
-    DeleteBucketCommand,
-  } = require("@aws-sdk/client-s3");
-  const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+import fetch from "node-fetch";
+import { createReadStream, statSync } from "fs";
+import { PutObjectCommandInput } from "@aws-sdk/client-s3/commands/PutObjectCommand";
 
-  // Create an Amazon S3 service client object.
-  const s3Client = new S3Client({
+/*
+async function presign2(s3Client: S3Client) {
+  const signer = new S3RequestPresigner({
     region: process.env.AWS_REGION,
-    endpoint: process.env.AWS_ENDPOINT,
-    apiVersion: "latest",
-    // credentials: { accessKeyId: process.env.AWS_KEY, secretAccessKey: process.env.AWS_SECRET },
-    // credential автоматически грузится из .env
+    sha256: Hash.bind(null, "sha256"), // In Node.js sha256: Sha256 // In browsers
   });
+  const presigned = await signer.presign(request);
+}*/
 
-  const run = async () => {
-    try {
-      // Create the command.
-      // Set parameters
-      // Create a random names for the Amazon Simple Storage Service (Amazon S3) bucket and key
-      const params = {
-        Bucket: process.env.TMPBACKETNAME,
-        Key: `test-object1.jpg`,
-        Body: "BODY",
-      };
+const run = async () => {
+  try {
+    // Create an Amazon S3 service client object.
+    const s3Client = new S3Client({
+      region: process.env.AWS_REGION,
+      endpoint: process.env.AWS_ENDPOINT,
+      apiVersion: "latest",
+      // credentials: { accessKeyId: process.env.AWS_KEY, secretAccessKey: process.env.AWS_SECRET },
+      // credential автоматически грузится из .env
+    });
 
-      const command = new PutObjectCommand(params);
+    // Create the command.
+    // Set parameters
+    // Create a random names for the Amazon Simple Storage Service (Amazon S3) bucket and key
+    const params: PutObjectCommandInput = {
+      Bucket: process.env.TMPBACKETNAME,
+      Key: `test-object1.jpg`,
+      ContentType: "image/pjpeg",
+      // Body: "BODY",
+    };
 
-      // Create the presigned URL.
-      const signedUrl = await getSignedUrl(s3Client, command, {
-        expiresIn: 3600,
-      });
-      console.log(
-        `\nPutting "${params.Key}" using signedUrl with body "${params.Body}" in v3`
-      );
-      console.log(signedUrl);
-      // const response = await fetch(signedUrl);
-      // console.log(
-      //   `\nResponse returned by signed URL: ${await response.text()}\n`
-      // );
-    } catch (err) {
-      console.log("Error creating presigned URL", err);
-    }
-  };
-  run();
-}
+    const command = new PutObjectCommand(params);
+
+    // Create the presigned URL.
+    const signedUrl: string = await getSignedUrl(s3Client, command, {
+      expiresIn: 3600,
+    });
+    console.log(`\nPutting "${params.Key}" using signedUrl with body in v3`);
+    console.log(signedUrl.length);
+    console.log(signedUrl);
+
+    const filePath =
+      "/root/_prj/yandex/s3-presign/assets/1920x1200_1400379_ArtFile.jpg";
+    const payload = createReadStream(filePath);
+    const response = await fetch(signedUrl, {
+      method: "PUT",
+      body: payload,
+      headers: {
+        "Content-Length": statSync(filePath).size,
+        "Content-Type": "image",
+      },
+    });
+  } catch (err) {
+    console.log("Error creating presigned URL", err);
+  }
+};
+run();
+
 // snippet-end:[s3.JavaScript.buckets.presignedurlv3]
 
 /*
