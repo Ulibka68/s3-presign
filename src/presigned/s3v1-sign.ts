@@ -1,39 +1,11 @@
-/* Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-Purpose:
-s3_put_presignedURL.ts creates a presigned URL to upload a file to an Amazon Simple Storage Service (Amazon S3) bucket.
-
-Note: This example immediately deletes the object and bucket.
-
-Inputs (replace in code):
-- REGION
-
-
-Running the code:
-ts-node s3_put_presignedURL.ts
-[Outputs | Returns]:
-Uploads the specified file to the specified bucket.
-*/
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 require("dotenv").config();
-const {
-  getSignedUrl,
-  S3RequestPresigner,
-} = require("@aws-sdk/s3-request-presigner");
-// import { Sha256 } from "@aws-crypto/sha256-browser";
-// import { Hash } from "@aws-sdk/hash-node";
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 import fetch from "node-fetch";
 import { createReadStream, statSync } from "fs";
 import { PutObjectCommandInput } from "@aws-sdk/client-s3/commands/PutObjectCommand";
 
-/*
-async function presign2(s3Client: S3Client) {
-  const signer = new S3RequestPresigner({
-    region: process.env.AWS_REGION,
-    sha256: Hash.bind(null, "sha256"), // In Node.js sha256: Sha256 // In browsers
-  });
-  const presigned = await signer.presign(request);
-}*/
 
 const run = async () => {
   try {
@@ -83,69 +55,3 @@ const run = async () => {
 };
 run();
 
-// snippet-end:[s3.JavaScript.buckets.presignedurlv3]
-
-/*
-ES6 Example
-https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/modules/_aws_sdk_s3_request_presigner.html
-
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-const client = new S3Client(clientParams);
-const command = new GetObjectCommand(getObjectParams);
-const url = await getSignedUrl(client, command, { expiresIn: 3600 });
-
-Get Presigned URL from an Existing Request
-ES6 Example:
-
-import { S3RequestPresigner } from "@aws-sdk/s3-request-presigner";
-import { Sha256 } from "@aws-crypto/sha256-browser";
-import { Hash } from "@aws-sdk/hash-node";
-const signer = new S3RequestPresigner({
-  region: regionProvider,
-  credentials: credentialsProvider,
-  sha256: Hash.bind(null, "sha256"), // In Node.js
-  //sha256: Sha256 // In browsers
-});
-const presigned = await signer.presign(request);
- */
-
-/*
-https://stackoverflow.com/questions/62613331/how-to-get-signed-s3-url-in-aws-sdk-js-version-3
-
-import { S3Client, GetObjectCommand, S3ClientConfig } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-
-
-const s3Configuration: S3ClientConfig = {
-    credentials: {
-        accessKeyId: '<ACCESS_KEY_ID>',
-        secretAccessKey: '<SECRET_ACCESS_KEY>'
-    },
-    region: '<REGION>',
-};
-const s3 = new S3Client(s3Configuration);
-const url = await getSignedUrl(s3, new GetObjectCommand({Bucket: '<BUCKET>', Key: '<KEY>' }), { expiresIn: 15 * 60 }); // expires in seconds
-console.log('Presigned URL: ', url);
- */
-
-/*
-https://devopsglobalsolutions.com/aws-developer-blog/generate-a-presigned-url-in-modular-aws-sdk-for-javascript/
-
-import fetch from "node-fetch";
-import { createReadStream, statSync } from "fs";
-//...
-const payload = createReadStream(filePath);
-const response = await fetch(presignedUrl, {
-    method: "PUT",
-    body: payload,
-    headers: {
-         "Content-Length": statSync(filePath).size
-    }
-});
- */
-
-/*
-Move Header to Query - запрос не выполнялся
-https://github.com/aws/aws-sdk-js-v3/blob/master/packages/signature-v4/src/moveHeadersToQuery.ts#L13
- */
