@@ -1,5 +1,5 @@
 {
-  "name": "compress-image-s3",
+  "name": "presign-url-s3",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,7 +8,6 @@
     "deploy": "tsc && .\\deploy\\deploy-compress.bat\n",
     "setup-backet": "ts-node ./setup/setup-backet.ts",
     "lint": "eslint src/**/*.ts",
-    "format": "eslint src/**/*.ts --fix",
     "clear-node_modules": "rimraf ./**/node_modules",
     "test2": "ts-node ./src/presigned/s3v1-sign.ts"
   },

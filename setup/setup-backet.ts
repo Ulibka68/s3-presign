@@ -3,15 +3,15 @@ import {
   PutBucketWebsiteCommand,
   GetBucketWebsiteCommand,
   PutBucketWebsiteRequest,
-} from '@aws-sdk/client-s3';
+} from "@aws-sdk/client-s3";
 
-require('dotenv').config();
+require("dotenv").config();
 
 // Create S3 service object
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
   endpoint: process.env.AWS_ENDPOINT,
-  apiVersion: 'latest',
+  apiVersion: "latest",
 });
 
 const CompressBacketName = process.env.COMPRESSBACKETNAME;
@@ -27,18 +27,18 @@ async function setupBacket() {
     Bucket: CompressBacketName,
     WebsiteConfiguration: {
       IndexDocument: {
-        Suffix: 'index.html', // the index document inserted into params JSON
+        Suffix: "index.html", // the index document inserted into params JSON
       },
       RoutingRules: [
         {
           Condition: {
-            HttpErrorCodeReturnedEquals: '404',
-            KeyPrefixEquals: PREFIX + '/',
+            HttpErrorCodeReturnedEquals: "404",
+            KeyPrefixEquals: PREFIX + "/",
           },
           Redirect: {
-            HttpRedirectCode: '302',
-            HostName: 'functions.yandexcloud.net',
-            Protocol: 'https',
+            HttpRedirectCode: "302",
+            HostName: "functions.yandexcloud.net",
+            Protocol: "https",
             ReplaceKeyPrefixWith: `${FUNCTION_ID}?path=`,
           },
         },
@@ -50,7 +50,9 @@ async function setupBacket() {
     let data = await s3.send(new PutBucketWebsiteCommand(staticHostParams));
 
     // запросить и вывести правила переадресации
-    data = await s3.send(new GetBucketWebsiteCommand({ Bucket: CompressBacketName }));
+    data = await s3.send(
+      new GetBucketWebsiteCommand({ Bucket: CompressBacketName })
+    );
     console.log((data as any).RoutingRules);
   } catch (err) {
     console.error(err.message);
