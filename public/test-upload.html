@@ -74,7 +74,8 @@
         // const URL = await getPreSignedUrl(fileData.name);
         const URL = await getPreSignedUrl(fileData.name);
         console.log('URL : ', URL.preSignedUrl);
-        const responce =  await sendFileDataXhr(fileData,URL.preSignedUrl);
+        // const responce =  await sendFileDataXhr(fileData,URL.preSignedUrl);
+        const responce =  await sendFileDataFetch(fileData,URL.preSignedUrl);
         console.log(responce);
     }
 
@@ -128,6 +129,22 @@
                 }
             };
         });
+    }
+
+    async function sendFileDataFetch(fileData,URL) {
+        const formData = new FormData();
+        formData.append('photos',fileData);
+
+        let result = await fetch(URL, {
+            method: 'PUT',
+            body: formData,
+            headers: {
+                "Content-Type": "image/jpeg",
+            },
+        })
+        // console.log('Result: ', result);
+        // result=await result.text();
+        return result;
     }
 </script>
 
