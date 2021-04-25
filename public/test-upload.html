@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>test upload</title>
+    <style>
+        .previewImage {
+            width: 200px;
+            height: 150px;
+            object-fit: contain;
+            border: 1px solid black;
+        }
+
+
+        #fileList ul {
+            list-style-type: none;
+        }
+        #fileList li {
+            border: 1px solid red;
+            display: inline-block;
+            margin-left: 1rem;
+            height: 81px;
+            box-sizing:content-box;
+        }
+    </style>
+</head>
+<body>
+<script>
+
+
+    function FileUpload(img, file) {
+        const reader = new FileReader();
+        this.ctrl = createThrobber(img);
+        const xhr = new XMLHttpRequest();
+        this.xhr = xhr;
+
+        const self = this;
+        this.xhr.upload.addEventListener("progress", function (e) {
+            if (e.lengthComputable) {
+                const percentage = Math.round((e.loaded * 100) / e.total);
+                self.ctrl.update(percentage);
+            }
+        }, false);
+
+        xhr.upload.addEventListener("load", function (e) {
+            self.ctrl.update(100);
+            const canvas = self.ctrl.ctx.canvas;
+            canvas.parentNode.removeChild(canvas);
+        }, false);
+        xhr.open("POST", "http://demos.hacks.mozilla.org/paul/demos/resources/webservices/devnull.php");
+        xhr.overrideMimeType('text/plain; charset=x-user-defined-binary');
+        reader.onload = function (evt) {
+            xhr.send(evt.target.result);
+        };
+        reader.readAsBinaryString(file);
+    }
+
+
+    function handleFiles2(files) {
+        if (!files.length) {
+            fileList.innerHTML = "<p>No files selected!</p>";
+        } else {
+            fileList.innerHTML='';
+            const list = document.createElement("ul");
+            for (var i = 0; i < files.length; i++) {
+                const li = document.createElement("li");
+                list.appendChild(li);
+
+                var img = document.createElement("img");
+                img.src = window.URL.createObjectURL(files[i]);
+                img.height = 60;
+                img.onload = function () {
+                    window.URL.revokeObjectURL(this.src);
+                }
+                li.appendChild(img);
+                var info = document.createElement("span");
+                info.innerHTML = files[i].name + ": " + files[i].size + " bytes";
+                li.appendChild(info);
+            }
+            fileList.appendChild(list);
+        }
+    }
+
+    function handleFiles(files) {
+        if (!files.length) {
+            fileList.innerHTML = "<p>No files selected!</p>";
+        } else {
+            fileList.innerHTML='';
+            const list = document.createElement("ul");
+            for (let i = 0; i < files.length; i++) {
+                const li = document.createElement("li");
+                list.appendChild(li);
+
+                const img = document.createElement("img");
+                img.src = window.URL.createObjectURL(files[i]);
+                img.height = 80;
+                img.onload = function () {
+                    window.URL.revokeObjectURL(this.src);
+                }
+                li.appendChild(img);
+            }
+            fileList.appendChild(list);
+        }
+    }
+
+</script>
+
+<h1>Test upload to S3</h1>
+<form>
+    <input type="file" id="fileElem2" multiple accept="image/*" style="display: none" onchange="handleFiles(this.files)">
+    <a href="#" id="fileSelect" onclick="fileElem2.click()">Select some files</a>
+    <input type="submit" value="Отправить">
+    <div id="fileList">
+        <p>No files selected!</p>
+    </div>
+</form>
+
+
+
+</body>
+</html>
