@@ -15,16 +15,30 @@
         #fileList ul {
             list-style-type: none;
         }
+
         #fileList li {
             border: 1px solid red;
             display: inline-block;
             margin-left: 1rem;
             height: 81px;
-            box-sizing:content-box;
+            box-sizing: content-box;
         }
     </style>
 </head>
 <body>
+
+
+<h1>Test upload to S3</h1>
+<form>
+    <input type="file" id="fileElem" multiple accept="image/*" style="display: none" onchange="handleFiles(this.files)">
+    <a href="#" id="fileSelect" onclick="fileElem.click()">Select some files</a>
+    <input type="submit" id="submitBtn" value="Отправить">
+    <div id="fileList">
+        <p>No files selected!</p>
+    </div>
+</form>
+
+
 <script>
 
 
@@ -56,36 +70,11 @@
     }
 
 
-    function handleFiles2(files) {
-        if (!files.length) {
-            fileList.innerHTML = "<p>No files selected!</p>";
-        } else {
-            fileList.innerHTML='';
-            const list = document.createElement("ul");
-            for (var i = 0; i < files.length; i++) {
-                const li = document.createElement("li");
-                list.appendChild(li);
-
-                var img = document.createElement("img");
-                img.src = window.URL.createObjectURL(files[i]);
-                img.height = 60;
-                img.onload = function () {
-                    window.URL.revokeObjectURL(this.src);
-                }
-                li.appendChild(img);
-                var info = document.createElement("span");
-                info.innerHTML = files[i].name + ": " + files[i].size + " bytes";
-                li.appendChild(info);
-            }
-            fileList.appendChild(list);
-        }
-    }
-
     function handleFiles(files) {
         if (!files.length) {
             fileList.innerHTML = "<p>No files selected!</p>";
         } else {
-            fileList.innerHTML='';
+            fileList.innerHTML = '';
             const list = document.createElement("ul");
             for (let i = 0; i < files.length; i++) {
                 const li = document.createElement("li");
@@ -98,24 +87,78 @@
                     window.URL.revokeObjectURL(this.src);
                 }
                 li.appendChild(img);
+                const span = document.createElement("span");
+                span.innerText = 100;
+                li.appendChild(span);
+
             }
             fileList.appendChild(list);
         }
     }
 
+    const submitBtn = document.getElementById('submitBtn');
+
+    async function sendFile(fileData) {
+        console.log(fileData.name);
+        // const URL = await getPreSignedUrl(fileData.name);
+        const URL = await getPreSignedUrl(fileData.name);
+        console.log('URL : ', URL.preSignedUrl);
+        const responce =  await sendFileDataXhr(fileData,URL.preSignedUrl);
+        console.log(responce);
+    }
+
+    submitBtn.onclick = async (evt) => {
+
+        evt.preventDefault();
+        const fileElem = document.getElementById('fileElem');
+        if (fileElem.files.length > 0) {
+            await sendFile(fileElem.files[0]);
+        }
+    }
+
+    async function getPreSignedUrl(fname) {
+        return new Promise((resolve, reject) => {
+            let url = new URL('https://functions.yandexcloud.net/d4ev55qi9k5829c4238v');
+            url.searchParams.set('inpPictName', fname)
+
+            let xhr = new XMLHttpRequest();
+
+            xhr.open('GET', url);
+            xhr.responseType = 'json';
+            xhr.send();
+
+            xhr.onload = function () {
+                if (xhr.status != 200) { // анализируем HTTP-статус ответа, если статус не 200, то произошла ошибка
+                    console.error(`Ошибка ${xhr.status}: ${xhr.statusText}`); // Например, 404: Not Found
+                    reject(xhr.statusText);
+                } else { // если всё прошло гладко, выводим результат
+                    resolve(xhr.response);
+                }
+            };
+        });
+    }
+
+    async function sendFileDataXhr(fileData,URL) {
+        return new Promise((resolve, reject) => {
+            const formData = new FormData();
+            formData.append('photos',fileData);
+
+            let xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+            xhr.open('PUT', URL);
+            xhr.send(formData);
+
+            xhr.onload = function () {
+                if (xhr.status != 200) { // анализируем HTTP-статус ответа, если статус не 200, то произошла ошибка
+                    console.error(`Ошибка ${xhr.status}: ${xhr.statusText}`); // Например, 404: Not Found
+                    reject(xhr.statusText);
+                } else { // если всё прошло гладко, выводим результат
+                    resolve(xhr.response);
+                }
+            };
+        });
+    }
 </script>
-
-<h1>Test upload to S3</h1>
-<form>
-    <input type="file" id="fileElem2" multiple accept="image/*" style="display: none" onchange="handleFiles(this.files)">
-    <a href="#" id="fileSelect" onclick="fileElem2.click()">Select some files</a>
-    <input type="submit" value="Отправить">
-    <div id="fileList">
-        <p>No files selected!</p>
-    </div>
-</form>
-
-
 
 </body>
 </html>
